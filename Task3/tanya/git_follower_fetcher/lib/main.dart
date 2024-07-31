@@ -2,22 +2,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:git_follower_fetcher/providers/UserProvider.dart';
+import 'package:git_follower_fetcher/screens/Followingpages.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
+void main() => runApp(
+ChangeNotifierProvider<UserProvider>(create: (context)=> UserProvider(),
+child:const MaterialApp(
       home: HomePage(),
       debugShowCheckedModeBanner: false,
-    );
-  }
-}
+    ) ,
+)
+ 
+);
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,17 +24,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   void getuser() {
      if(_controller.text == ''){
-
+             Provider.of<UserProvider>(context).setMessage("Please enter username");
      }else{
-      
+             Provider.of<UserProvider>(context).fetchUser(_controller.text).then((value){
+              if(value){
+                Navigator.push(context, MaterialPageRoute(builder: (context) => FollowingPage()));
+              }
+              
+             }
+             );
+            
      }
   }
 
   @override
   Widget build(BuildContext context) {
+   
     return Scaffold(
         body: SingleChildScrollView(
             child: Container(
@@ -74,7 +79,12 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(10)),
                   color: const Color.fromARGB(255, 47, 45, 45)),
               child: TextFormField(
+               style: TextStyle(color: Colors.white,fontSize: 18),
+                onChanged: (value) {
+                  Provider.of<UserProvider>(context).setMessage(null);
+                },
                 controller: _controller,
+                enabled:! Provider.of<UserProvider>(context).getLoading(),
                 showCursor: true,
                 cursorColor: Color.fromARGB(255, 47, 125, 53),
                 decoration: const InputDecoration(
@@ -93,7 +103,10 @@ class _HomePageState extends State<HomePage> {
               height: 50,
               minWidth: MediaQuery.of(context).size.width,
               color: const Color.fromARGB(255, 47, 125, 53),
-              child: const Text(
+              child:
+              Provider.of<UserProvider>(context).getLoading()?
+              CircularProgressIndicator(backgroundColor:Color.fromARGB(255, 235, 214, 214) ,strokeWidth: 3,):
+              Text(
                 "Get Followers",
                 style: TextStyle(
                     color: Color.fromARGB(255, 235, 214, 214), fontSize: 18),
